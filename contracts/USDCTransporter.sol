@@ -1,41 +1,37 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-// Deploy this contract on Fuji
+// Deploy this contract on Ethereum sepolia
 
 import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol";
 import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 import {IERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
 
-/**
- * THIS IS AN EXAMPLE CONTRACT THAT USES HARDCODED VALUES FOR CLARITY.
- * THIS IS AN EXAMPLE CONTRACT THAT USES UN-AUDITED CODE.
- * DO NOT USE THIS CODE IN PRODUCTION.
- */
-contract USDCTransporter {
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
+
+contract USDCTransporter is Ownable {
     using SafeERC20 for IERC20;
 
     error NotEnoughBalanceForFees(uint256 currentBalance, uint256 calculatedFees);
     error NotEnoughBalanceUsdcForTransfer(uint256 currentBalance);
     error NothingToWithdraw();
 
-    address public owner;
     IRouterClient private immutable ccipRouter;
     IERC20 private immutable linkToken;
     IERC20 private immutable usdcToken;
 
-    // https://docs.chain.link/ccip/supported-networks/v1_2_0/testnet#avalanche-fuji
-    address ccipRouterAddress = 0xF694E193200268f9a4868e4Aa017A0118C9a8177;
+    // https://docs.chain.link/ccip/supported-networks/v1_2_0/testnet#op-sepolia
+    address ccipRouterAddress = 0x114A20A10b43D4115e5aeef7345a1A71d2a60C57;
 
-    // https://docs.chain.link/resources/link-token-contracts#fuji-testnet
-    address linkAddress = 0x0b9d5D9136855f6FEc3c0993feE6E9CE8a297846;
+    // https://docs.chain.link/resources/link-token-contracts#op-sepolia
+    address linkAddress = 0xE4aB69C077896252FAFBD49EFD26B5D171A32410;
 
     // https://developers.circle.com/stablecoins/docs/usdc-on-test-networks
-    address usdcAddress = 0x5425890298aed601595a70AB815c96711a31Bc65;
+    address usdcAddress = 0x5fd84259d66Cd46123540766Be93DFE6D43130D7;
 
-    // https://docs.chain.link/ccip/supported-networks/v1_2_0/testnet#ethereum-sepolia
-    uint64 destinationChainSelector = 16015286601757825753;
+
 
     event UsdcTransferred(
         bytes32 messageId,
@@ -45,14 +41,14 @@ contract USDCTransporter {
         uint256 ccipFee
     );
 
-    constructor() {
-        owner = msg.sender;
+    constructor() Ownable(msg.sender) {
         ccipRouter = IRouterClient(ccipRouterAddress);
         linkToken = IERC20(linkAddress);
         usdcToken = IERC20(usdcAddress);
     }
 
     function transferUsdcToSepolia(
+        uint64 _destinationChainSelector,
         address _receiver,
         uint256 _amount
     )
@@ -78,7 +74,7 @@ contract USDCTransporter {
         });
 
         uint256 ccipFee = ccipRouter.getFee(
-            destinationChainSelector,
+            _destinationChainSelector,
             message
         );
 
@@ -92,11 +88,11 @@ contract USDCTransporter {
         usdcToken.approve(address(ccipRouter), _amount);
 
         // Send CCIP Message
-        messageId = ccipRouter.ccipSend(destinationChainSelector, message);
+        messageId = ccipRouter.ccipSend(_destinationChainSelector, message);
 
         emit UsdcTransferred(
             messageId,
-            destinationChainSelector,
+            _destinationChainSelector,
             _receiver,
             _amount,
             ccipFee
@@ -109,13 +105,9 @@ contract USDCTransporter {
 
     function balancesOf(address account) public view returns (uint256 linkBalance, uint256 usdcBalance) {
         linkBalance =  linkToken.balanceOf(account);
-        usdcBalance = IERC20(usdcToken).balanceOf(account);
+        usdcBalance = usdcToken.balanceOf(account);
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
 
     function withdrawToken(
         address _beneficiary,

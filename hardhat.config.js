@@ -33,7 +33,7 @@ module.exports = {
   sourcify: {
     enabled: true
   },
-  // paths: {
-  //   artifacts: "./src/artifacts",
-  // },
+  paths: {
+    artifacts: "./interface/src/artifacts",
+  },
 };
