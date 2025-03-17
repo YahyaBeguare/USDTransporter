@@ -4,13 +4,15 @@
   "description": "a project that showcases the use of CCIP",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deployContract": "npx hardhat run scripts/deployContract.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@chainlink/contracts-ccip": "^1.5.0",
     "@openzeppelin/contracts": "^5.2.0",
+    "dotenv": "^16.4.7",
     "hardhat": "^2.22.19"
   },
   "devDependencies": {

@@ -18,9 +18,9 @@ contract USDCTransporter is Ownable {
     error NotEnoughBalanceUsdcForTransfer(uint256 currentBalance);
     error NothingToWithdraw();
 
-    IRouterClient private immutable ccipRouter;
-    IERC20 private immutable linkToken;
-    IERC20 private immutable usdcToken;
+    IRouterClient private  ccipRouter;
+    IERC20 private  linkToken;
+    IERC20 private  usdcToken;
 
     // https://docs.chain.link/ccip/supported-networks/v1_2_0/testnet#op-sepolia
     address ccipRouterAddress = 0x114A20A10b43D4115e5aeef7345a1A71d2a60C57;
@@ -30,7 +30,6 @@ contract USDCTransporter is Ownable {
 
     // https://developers.circle.com/stablecoins/docs/usdc-on-test-networks
     address usdcAddress = 0x5fd84259d66Cd46123540766Be93DFE6D43130D7;
-
 
 
     event UsdcTransferred(
@@ -46,7 +45,13 @@ contract USDCTransporter is Ownable {
         linkToken = IERC20(linkAddress);
         usdcToken = IERC20(usdcAddress);
     }
-
+    // Set the CCIP Cofigs update: Router, Link Token and USDC Token addresses
+    function updateCCIPConfigs(address _ccipRouterAddress, address _linkAddress, address _usdcAddress) public onlyOwner {
+        ccipRouter = IRouterClient(_ccipRouterAddress);
+        linkToken = IERC20(_linkAddress);
+        usdcToken = IERC20(_usdcAddress);
+    }
+    // Transfer USDC from Sepolia to other chains supported by Chainlink CCIP
     function transferUsdcToSepolia(
         uint64 _destinationChainSelector,
         address _receiver,

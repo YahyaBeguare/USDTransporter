@@ -1,4 +1,4 @@
-const {hre}= require("hardhat");
+const {hre, ethers}= require("hardhat");
 const fs = require("fs");
 const path = require("path");   
 const addressFile = require("../address.json");
@@ -6,9 +6,9 @@ let contractAddress ;
 
 async function deploy(){
     try{
-    const usdcTransporter= await hre.ethers.deployContract("USDTransporter");
-    await usdcTransporter.waitForDeployement();
-    contractAddress = usdcTransporter.target;
+    const usdcTransporter= await ethers.deployContract("USDCTransporter");
+    await usdcTransporter.waitForDeployment();
+    contractAddress =  usdcTransporter.target;
     console.log("Contract deployed to:", contractAddress); 
 
 }  catch(error){
@@ -16,10 +16,8 @@ async function deploy(){
 }
 
 try {
-    addressFile["USDCTransporter"][
-      "ContractAddess"
-    ] = contractAddress;
-    fs.writeFile("./address.json", JSON.stringify(addressFile, null, 2));
+    addressFile["USDCTransporter"] = {ContractAddess: contractAddress};
+    fs.writeFileSync("./address.json", JSON.stringify(addressFile, null, 2));
   } catch (err) {
     console.error("Error: ", err);
   }
@@ -32,3 +30,4 @@ deploy()
         console.error(error);
         process.exit(1);
     });
+
